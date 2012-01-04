@@ -237,6 +237,11 @@
   :safe 'stringp
   :group 'deft)
 
+(defcustom deft-use-date-as-filename nil
+  "Use YYMMDD%c for default filename."
+  :type 'boolean
+  :group 'deft)
+
 (defcustom deft-extension "txt"
   "Deft file extension."
   :type 'string
@@ -600,9 +605,15 @@ use it as the title."
   (let (filename)
     (if (and deft-use-filename-as-title deft-filter-regexp)
 	(setq filename (concat (file-name-as-directory deft-directory) deft-filter-regexp "." deft-extension))
-      (let (fmt counter temp-buffer)
-	(setq counter 0)
-	(setq fmt (concat "deft-%d." deft-extension))
+      (let (fmt counter temp-buffer basename)
+        (if deft-use-date-as-filename
+            ((lambda ()
+              (setq counter 97) ;; ascii 'a'
+              (setq basename (concat (format-time-string "%y%m%d") "%c."))))
+          ((lambda ()
+            (setq counter 0)
+            (setq basename "deft-%d."))))
+	(setq fmt (concat basename deft-extension))
 	(setq filename (concat (file-name-as-directory deft-directory)
 			       (format fmt counter)))
 	(while (or (file-exists-p filename)
