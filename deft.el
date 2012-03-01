@@ -1,6 +1,6 @@
 ;;; deft.el --- quickly browse, filter, and edit plain text notes
 
-;; Copyright (C) 2011 Jason R. Blevins <jrblevin@sdf.org>
+;; Copyright (C) 2011-2012 Jason R. Blevins <jrblevin@sdf.org>
 ;; All rights reserved.
 
 ;; Redistribution and use in source and binary forms, with or without
@@ -441,10 +441,15 @@ title."
   (setq deft-hash-titles (make-hash-table :test 'equal))
   (setq deft-hash-summaries (make-hash-table :test 'equal)))
 
-(defun deft-cache-update ()
-  "Update cached file information."
+(defun deft-cache-update-all ()
+  "Update file list and update cached information for each file."
   (setq deft-all-files (deft-find-all-files))             ; List all files
   (mapc 'deft-cache-file deft-all-files)                  ; Cache contents
+  (setq deft-all-files (deft-sort-files deft-all-files))) ; Sort by mtime
+
+(defun deft-cache-update-file (file)
+  "Update cached information for a single file."
+  (deft-cache-file file)                                  ; Cache contents
   (setq deft-all-files (deft-sort-files deft-all-files))) ; Sort by mtime
 
 ;; Cache access
@@ -545,14 +550,19 @@ title."
 (defun deft-refresh ()
   "Update the file cache, reapply the filter, and refresh the *Deft* buffer."
   (interactive)
-  (when (get-buffer deft-buffer)
-    (set-buffer deft-buffer)
-    (deft-cache-update)
-    (deft-filter-update)
-    (deft-buffer-setup)))
+  (deft-cache-update-all)
+  (deft-refresh-filter))
+
+(defun deft-refresh-filter ()
+  "Reapply the filter and refresh the *Deft* buffer.
+Call this after any actions which update the cache."
+  (interactive)
+  (deft-filter-update)
+  (deft-refresh-browser))
 
 (defun deft-refresh-browser ()
-  "Refresh the *Deft* buffer in the background."
+  "Refresh the *Deft* buffer in the background.
+Call this function after any actions which update the filter and file list."
   (when (get-buffer deft-buffer)
     (with-current-buffer deft-buffer
       (deft-buffer-setup))))
@@ -575,7 +585,9 @@ title."
     (funcall deft-text-mode)
     (add-to-list 'deft-auto-save-buffers (buffer-name))
     (add-hook 'after-save-hook
-              (lambda () (save-excursion (deft-refresh)))
+              (lambda () (save-excursion
+                           (deft-cache-update-file buffer-file-name)
+                           (deft-refresh-filter)))
               nil t)))
 
 (defun deft-find-file (file)
@@ -703,8 +715,7 @@ If the point is not on a file widget, do nothing."
   (if (= (length str) 0)
       (setq deft-filter-regexp nil)
     (setq deft-filter-regexp str)
-    (setq deft-current-files (mapcar 'deft-filter-match-file deft-all-files))
-    (setq deft-current-files (delq nil deft-current-files)))
+    (deft-filter-update))
   (deft-refresh-browser))
 
 (defun deft-filter-increment ()
@@ -822,7 +833,7 @@ Turning on `deft-mode' runs the hook `deft-mode-hook'.
   (setq default-directory deft-directory)
   (use-local-map deft-mode-map)
   (deft-cache-initialize)
-  (deft-cache-update)
+  (deft-cache-update-all)
   (deft-filter-initialize)
   (setq major-mode 'deft-mode)
   (setq mode-name "Deft")
