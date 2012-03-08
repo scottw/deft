@@ -1,6 +1,6 @@
 ;;; deft.el --- quickly browse, filter, and edit plain text notes
 
-;; Copyright (C) 2011-2012 Jason R. Blevins <jrblevin@sdf.org>
+;;; Copyright (C) 2011-2012 Jason R. Blevins <jrblevin@sdf.org>
 ;; All rights reserved.
 
 ;; Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,10 @@
 ;; ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;; POSSIBILITY OF SUCH DAMAGE.
 
-;; Version: 0.4
-;; Author: Jason R. Blevins <jrblevin@sdf.org>
-;; Keywords: plain text, notes, Simplenote, Notational Velocity
-;; URL: http://jblevins.org/projects/deft/
+;;; Version: 0.4
+;;; Author: Jason R. Blevins <jrblevin@sdf.org>
+;;; Keywords: plain text, notes, Simplenote, Notational Velocity
+;;; URL: http://jblevins.org/projects/deft/
 
 ;; This file is not part of GNU Emacs.
 
@@ -608,6 +608,7 @@ use it as the title."
       (write-region deft-filter-regexp nil file nil))
     (deft-open-file file)))
 
+;;;###autoload
 (defun deft-new-file ()
   "Create a new file quickly, with an automatically generated filename
 or the filter string if non-nil and deft-use-filename-as-title is set.
